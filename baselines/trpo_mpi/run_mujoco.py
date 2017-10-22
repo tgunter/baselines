@@ -11,6 +11,7 @@ from baselines.pposgd.mlp_policy import MlpPolicy
 from baselines.common.mpi_fork import mpi_fork
 from baselines import bench
 from baselines.trpo_mpi import trpo_mpi
+from baselines.trpo_mpi import trpo_mpi_modified
 import sys
 num_cpu=1
 
@@ -19,7 +20,6 @@ def train(env_id, num_timesteps, seed):
     if whoami == "parent":
         return
     import baselines.common.tf_util as U
-    logger.session().__enter__()
     sess = U.single_threaded_session()
     sess.__enter__()
 
@@ -32,12 +32,13 @@ def train(env_id, num_timesteps, seed):
     def policy_fn(name, ob_space, ac_space):
         return MlpPolicy(name=name, ob_space=env.observation_space, ac_space=env.action_space,
             hid_size=32, num_hid_layers=2)
+    logger.configure()
     env = bench.Monitor(env, osp.join(logger.get_dir(), "%i.monitor.json" % rank))
     env.seed(workerseed)
     gym.logger.setLevel(logging.WARN)
 
-    trpo_mpi.learn(env, policy_fn, timesteps_per_batch=1024, max_kl=0.01, cg_iters=10, cg_damping=0.1,
-        max_timesteps=num_timesteps, gamma=0.99, lam=0.98, vf_iters=5, vf_stepsize=1e-3)
+    trpo_mpi_modified.learn(env, policy_fn, timesteps_per_batch=1024, max_kl=0.01, cg_iters=10, cg_damping=0.1,
+        max_timesteps=num_timesteps, gamma=0.99, lam=0.98, vf_iters=5, vf_stepsize=1e-3, alpha=100)
     env.close()
 
 def main():

@@ -428,6 +428,8 @@ class _Function(object):
             self._feed_input(feed_dict, inpt, value)
         # Update the kwargs
         kwargs_passed_inpt_names = set()
+       
+        
         for inpt in self.inputs[len(args):]:
             inpt_name = inpt.name.split(':')[0]
             inpt_name = inpt_name.split('/')[-1]

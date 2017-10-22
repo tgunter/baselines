@@ -13,7 +13,8 @@ class MlpPolicy(object):
 
     def _init(self, ob_space, ac_space, hid_size, num_hid_layers, gaussian_fixed_var=True):
         assert isinstance(ob_space, gym.spaces.Box)
-
+        self.num_hid_layers = num_hid_layers
+        
         self.pdtype = pdtype = make_pdtype(ac_space)
         sequence_length = None
 
@@ -37,7 +38,7 @@ class MlpPolicy(object):
             pdparam = U.concatenate([mean, mean * 0.0 + logstd], axis=1)
         else:
             pdparam = U.dense(last_out, pdtype.param_shape()[0], "polfinal", U.normc_initializer(0.01))
-
+        
         self.pd = pdtype.pdfromflat(pdparam)
 
         self.state_in = []
@@ -51,9 +52,10 @@ class MlpPolicy(object):
         ac1, vpred1 =  self._act(stochastic, ob[None])
         return ac1[0], vpred1[0]
     def get_variables(self):
-        return tf.get_collection(tf.GraphKeys.VARIABLES, self.scope)
+        return tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, self.scope)
     def get_trainable_variables(self):
         return tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, self.scope)
     def get_initial_state(self):
         return []
-
+    
+    
